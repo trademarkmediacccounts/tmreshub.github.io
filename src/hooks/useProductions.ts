@@ -28,7 +28,7 @@ export function useCreateProduction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (item: Partial<Production>) => {
-      const { error } = await supabase.from("productions").insert(item);
+      const { error } = await supabase.from("productions").insert([item as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["productions"] }); toast.success("Production added"); },

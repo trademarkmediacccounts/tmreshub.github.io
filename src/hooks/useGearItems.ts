@@ -30,7 +30,7 @@ export function useCreateGearItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (item: Partial<GearItem>) => {
-      const { error } = await supabase.from("gear_items").insert(item);
+      const { error } = await supabase.from("gear_items").insert([item as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["gear_items"] }); toast.success("Gear item added"); },

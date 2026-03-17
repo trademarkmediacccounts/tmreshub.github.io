@@ -33,7 +33,7 @@ export function useCreateAsset() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (asset: Partial<AssetInsert>) => {
-      const { error } = await supabase.from("assets").insert(asset);
+      const { error } = await supabase.from("assets").insert([asset as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["assets"] }); toast.success("Asset created"); },

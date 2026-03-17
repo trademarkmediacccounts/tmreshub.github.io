@@ -30,7 +30,7 @@ export function useCreateBuildProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (item: Partial<BuildProject>) => {
-      const { error } = await supabase.from("build_projects").insert(item);
+      const { error } = await supabase.from("build_projects").insert([item as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["build_projects"] }); toast.success("Project created"); },
