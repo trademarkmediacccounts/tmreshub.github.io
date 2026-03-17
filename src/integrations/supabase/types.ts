@@ -14,7 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      assets: {
+        Row: {
+          client: string | null
+          comments: number
+          created_at: string
+          duration: string | null
+          id: string
+          name: string
+          size: string | null
+          status: string
+          type: string
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          client?: string | null
+          comments?: number
+          created_at?: string
+          duration?: string | null
+          id?: string
+          name: string
+          size?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          client?: string | null
+          comments?: number
+          created_at?: string
+          duration?: string | null
+          id?: string
+          name?: string
+          size?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          views?: number
+        }
+        Relationships: []
+      }
+      build_projects: {
+        Row: {
+          branch: string
+          created_at: string
+          feedback: number
+          id: string
+          last_deploy: string | null
+          name: string
+          progress: number
+          status: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          branch?: string
+          created_at?: string
+          feedback?: number
+          id?: string
+          last_deploy?: string | null
+          name: string
+          progress?: number
+          status?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          branch?: string
+          created_at?: string
+          feedback?: number
+          id?: string
+          last_deploy?: string | null
+          name?: string
+          progress?: number
+          status?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      gear_items: {
+        Row: {
+          category: string
+          condition: string
+          created_at: string
+          id: string
+          last_used: string | null
+          location: string | null
+          name: string
+          reserved_for: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          condition?: string
+          created_at?: string
+          id?: string
+          last_used?: string | null
+          location?: string | null
+          name: string
+          reserved_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          condition?: string
+          created_at?: string
+          id?: string
+          last_used?: string | null
+          location?: string | null
+          name?: string
+          reserved_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      productions: {
+        Row: {
+          created_at: string
+          crew: number
+          date: string
+          id: string
+          location: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          crew?: number
+          date: string
+          id?: string
+          location: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          crew?: number
+          date?: string
+          id?: string
+          location?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
