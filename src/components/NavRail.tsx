@@ -22,6 +22,7 @@ const navItems = [
 ];
 
 export function NavRail() {
+  const { signOut } = useAuth();
   const location = useLocation();
 
   return (
