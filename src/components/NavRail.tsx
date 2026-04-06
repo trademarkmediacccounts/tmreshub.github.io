@@ -68,6 +68,13 @@ export function NavRail() {
       >
         <Settings className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
       </Link>
+      <button
+        onClick={signOut}
+        className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors duration-200 group mt-1"
+        title="Sign out"
+      >
+        <LogOut className="w-5 h-5 text-muted-foreground group-hover:text-destructive transition-colors" />
+      </button>
     </nav>
   );
 }
