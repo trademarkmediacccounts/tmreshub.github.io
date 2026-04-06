@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Asset {
   id: string;
@@ -12,6 +13,7 @@ export interface Asset {
   comments: number;
   views: number;
   client: string | null;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,9 +33,10 @@ export function useAssets() {
 
 export function useCreateAsset() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async (asset: Partial<AssetInsert>) => {
-      const { error } = await supabase.from("assets").insert([asset as any]);
+      const { error } = await supabase.from("assets").insert([{ ...asset, user_id: user?.id } as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["assets"] }); toast.success("Asset created"); },

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface GearItem {
   id: string;
@@ -11,6 +12,7 @@ export interface GearItem {
   last_used: string | null;
   condition: string;
   reserved_for: string | null;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,9 +30,10 @@ export function useGearItems() {
 
 export function useCreateGearItem() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async (item: Partial<GearItem>) => {
-      const { error } = await supabase.from("gear_items").insert([item as any]);
+      const { error } = await supabase.from("gear_items").insert([{ ...item, user_id: user?.id } as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["gear_items"] }); toast.success("Gear item added"); },

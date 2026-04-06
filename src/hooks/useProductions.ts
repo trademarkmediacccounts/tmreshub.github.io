@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Production {
   id: string;
@@ -9,6 +10,7 @@ export interface Production {
   location: string;
   crew: number;
   status: string;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,9 +28,10 @@ export function useProductions() {
 
 export function useCreateProduction() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async (item: Partial<Production>) => {
-      const { error } = await supabase.from("productions").insert([item as any]);
+      const { error } = await supabase.from("productions").insert([{ ...item, user_id: user?.id } as any]);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["productions"] }); toast.success("Production added"); },
