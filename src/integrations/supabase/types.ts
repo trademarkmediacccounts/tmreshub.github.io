@@ -101,6 +101,94 @@ export type Database = {
         }
         Relationships: []
       }
+      call_sheet_entries: {
+        Row: {
+          call_sheet_id: string
+          call_time: string
+          created_at: string
+          id: string
+          notes: string | null
+          person_name: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          call_sheet_id: string
+          call_time?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          person_name: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          call_sheet_id?: string
+          call_time?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          person_name?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sheet_entries_call_sheet_id_fkey"
+            columns: ["call_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "call_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_sheets: {
+        Row: {
+          call_time: string
+          created_at: string
+          general_notes: string | null
+          id: string
+          location: string | null
+          project_id: string
+          shoot_date: string
+          updated_at: string
+          user_id: string
+          weather_notes: string | null
+        }
+        Insert: {
+          call_time?: string
+          created_at?: string
+          general_notes?: string | null
+          id?: string
+          location?: string | null
+          project_id: string
+          shoot_date: string
+          updated_at?: string
+          user_id: string
+          weather_notes?: string | null
+        }
+        Update: {
+          call_time?: string
+          created_at?: string
+          general_notes?: string | null
+          id?: string
+          location?: string | null
+          project_id?: string
+          shoot_date?: string
+          updated_at?: string
+          user_id?: string
+          weather_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sheets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gear_items: {
         Row: {
           category: string
@@ -178,6 +266,201 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      project_assets: {
+        Row: {
+          category: string
+          created_at: string
+          file_type: string
+          file_url: string | null
+          id: string
+          name: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      script_breakdowns: {
+        Row: {
+          created_at: string
+          description: string | null
+          element_type: string
+          id: string
+          name: string
+          project_id: string
+          scene_reference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          element_type?: string
+          id?: string
+          name: string
+          project_id: string
+          scene_reference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          element_type?: string
+          id?: string
+          name?: string
+          project_id?: string
+          scene_reference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_breakdowns_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shots: {
+        Row: {
+          angle: string | null
+          created_at: string
+          description: string | null
+          id: string
+          lens: string | null
+          location_notes: string | null
+          movement: string | null
+          project_id: string
+          shot_number: string
+          shot_type: string
+          sort_order: number
+          status: string
+          storyboard_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          angle?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lens?: string | null
+          location_notes?: string | null
+          movement?: string | null
+          project_id: string
+          shot_number: string
+          shot_type?: string
+          sort_order?: number
+          status?: string
+          storyboard_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          angle?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lens?: string | null
+          location_notes?: string | null
+          movement?: string | null
+          project_id?: string
+          shot_number?: string
+          shot_type?: string
+          sort_order?: number
+          status?: string
+          storyboard_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
