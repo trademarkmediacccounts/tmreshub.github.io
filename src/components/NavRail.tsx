@@ -37,7 +37,7 @@ export function NavRail() {
       {/* Nav Items */}
       <div className="flex-1 flex flex-col items-center gap-1">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.path}
