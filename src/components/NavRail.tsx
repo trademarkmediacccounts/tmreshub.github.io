@@ -9,11 +9,13 @@ import {
   Vault,
   Settings,
   LogOut,
+  Folder,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { icon: LayoutDashboard, path: "/", label: "Dashboard" },
+  { icon: Folder, path: "/projects", label: "Projects" },
   { icon: Film, path: "/assets", label: "TM/Assets" },
   { icon: Radio, path: "/live", label: "TM/Live" },
   { icon: Globe, path: "/build", label: "TM/Build" },
