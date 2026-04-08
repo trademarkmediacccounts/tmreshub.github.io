@@ -9,11 +9,13 @@ import {
   Vault,
   Settings,
   LogOut,
+  Folder,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { icon: LayoutDashboard, path: "/", label: "Dashboard" },
+  { icon: Folder, path: "/projects", label: "Projects" },
   { icon: Film, path: "/assets", label: "TM/Assets" },
   { icon: Radio, path: "/live", label: "TM/Live" },
   { icon: Globe, path: "/build", label: "TM/Build" },
@@ -35,7 +37,7 @@ export function NavRail() {
       {/* Nav Items */}
       <div className="flex-1 flex flex-col items-center gap-1">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.path}

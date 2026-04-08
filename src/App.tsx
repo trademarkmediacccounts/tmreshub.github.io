@@ -14,6 +14,13 @@ import VaultPage from "./pages/VaultPage";
 import SettingsPage from "./pages/SettingsPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+import ProjectsPage from "./pages/ProjectsPage";
+import ProjectWorkspace from "./pages/ProjectWorkspace";
+import ProjectOverview from "./pages/project/ProjectOverview";
+import ShotListPage from "./pages/project/ShotListPage";
+import CallSheetsPage from "./pages/project/CallSheetsPage";
+import ScriptBreakdownPage from "./pages/project/ScriptBreakdownPage";
+import ProjectFilesPage from "./pages/project/ProjectFilesPage";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +49,14 @@ function ProtectedRoutes() {
         <Route path="/flow" element={<Flow />} />
         <Route path="/vault" element={<VaultPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:projectId" element={<ProjectWorkspace />}>
+          <Route index element={<ProjectOverview />} />
+          <Route path="shots" element={<ShotListPage />} />
+          <Route path="schedule" element={<CallSheetsPage />} />
+          <Route path="breakdown" element={<ScriptBreakdownPage />} />
+          <Route path="files" element={<ProjectFilesPage />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
