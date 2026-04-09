@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { useProjects, useCreateProject, useDeleteProject } from "@/hooks/useProjects";
 import { motion } from "framer-motion";
-import { Plus, Folder, Calendar, Users, MoreHorizontal, Trash2 } from "lucide-react";
+import { Plus, Folder, Users, MoreHorizontal, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 const PROJECT_TYPES = ["Commercial", "Music Video", "Documentary", "Corporate", "Short Film", "Live Event", "Social Content"];
-const PROJECT_STATUSES = ["Pre-Production", "Production", "Post-Production", "Delivered", "Archived"];
 
 export default function ProjectsPage() {
   const { data: projects = [], isLoading } = useProjects();
@@ -21,19 +20,32 @@ export default function ProjectsPage() {
   const deleteProject = useDeleteProject();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", type: "Commercial", client: "" });
+  const [form, setForm] = useState({ name: "", description: "", type: "Commercial", client: "", start_date: "", end_date: "" });
 
   const handleCreate = () => {
     if (!form.name.trim()) return;
-    createProject.mutate(form, { onSuccess: () => { setDialogOpen(false); setForm({ name: "", description: "", type: "Commercial", client: "" }); } });
+    const payload: Record<string, string | null> = {
+      name: form.name,
+      description: form.description || null,
+      type: form.type,
+      client: form.client || null,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
+    };
+    createProject.mutate(payload as any, {
+      onSuccess: () => {
+        setDialogOpen(false);
+        setForm({ name: "", description: "", type: "Commercial", client: "", start_date: "", end_date: "" });
+      },
+    });
   };
 
   const statusColor: Record<string, string> = {
     "Pre-Production": "bg-yellow-500/20 text-yellow-400",
-    "Production": "bg-primary/20 text-primary",
+    Production: "bg-primary/20 text-primary",
     "Post-Production": "bg-blue-500/20 text-blue-400",
-    "Delivered": "bg-green-500/20 text-green-400",
-    "Archived": "bg-muted text-muted-foreground",
+    Delivered: "bg-green-500/20 text-green-400",
+    Archived: "bg-muted text-muted-foreground",
   };
 
   return (
@@ -121,6 +133,16 @@ export default function ProjectsPage() {
               <SelectContent>{PROJECT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
             <Input placeholder="Client (optional)" value={form.client} onChange={e => setForm(f => ({ ...f, client: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Start Date</label>
+                <Input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">End Date</label>
+                <Input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} />
+              </div>
+            </div>
             <Button onClick={handleCreate} disabled={!form.name.trim() || createProject.isPending} className="w-full">
               {createProject.isPending ? "Creating…" : "Create Project"}
             </Button>

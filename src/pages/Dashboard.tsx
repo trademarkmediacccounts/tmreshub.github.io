@@ -1,97 +1,119 @@
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { motion } from "framer-motion";
-import { Film, Radio, Globe, GitBranch, Vault, TrendingUp, Clock, Users, HardDrive, DollarSign, ArrowRight } from "lucide-react";
+import { Folder, Camera, ClipboardList, FileText, FolderOpen, Plus, ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAssets } from "@/hooks/useAssets";
-import { useGearItems } from "@/hooks/useGearItems";
-import { useBuildProjects } from "@/hooks/useBuildProjects";
-import { useProductions } from "@/hooks/useProductions";
+import { useProjects } from "@/hooks/useProjects";
 
 export default function Dashboard() {
-  const { data: assets = [] } = useAssets();
-  const { data: gearItems = [] } = useGearItems();
-  const { data: buildProjects = [] } = useBuildProjects();
-  const { data: productions = [] } = useProductions();
+  const { data: projects = [], isLoading } = useProjects();
 
-  const availableGear = gearItems.filter(g => g.status === "Available").length;
+  const activeProjects = projects.filter(p => p.status !== "Archived" && p.status !== "Delivered");
+  const inProduction = projects.filter(p => p.status === "Production");
+  const inPost = projects.filter(p => p.status === "Post-Production");
+  const delivered = projects.filter(p => p.status === "Delivered");
 
-  const subApps = [
-    { name: "TM/Assets", desc: "Media delivery & review", icon: Film, path: "/assets", count: `${assets.length} assets` },
-    { name: "TM/Live", desc: "Production logistics", icon: Radio, path: "/live", count: `${productions.length} upcoming` },
-    { name: "TM/Build", desc: "Web staging & feedback", icon: Globe, path: "/build", count: `${buildProjects.length} projects` },
-    { name: "TM/Flow", desc: "CRM & pipeline", icon: GitBranch, path: "/flow", count: "Pipeline" },
-    { name: "TM/Vault", desc: "Billing & contracts", icon: Vault, path: "/vault", count: "Finances" },
-  ];
-
-  const recentItems = [
-    ...assets.slice(0, 2).map(a => ({ action: `Asset: ${a.status}`, project: a.name, time: new Date(a.created_at).toLocaleDateString(), user: a.client || "—" })),
-    ...buildProjects.slice(0, 2).map(p => ({ action: `Build: ${p.status}`, project: p.name, time: p.last_deploy || "—", user: p.branch })),
-    ...productions.slice(0, 2).map(p => ({ action: `Production: ${p.status}`, project: p.name, time: p.date, user: `${p.crew} crew` })),
-  ];
+  const statusColor: Record<string, string> = {
+    "Pre-Production": "bg-yellow-500/20 text-yellow-400",
+    Production: "bg-primary/20 text-primary",
+    "Post-Production": "bg-blue-500/20 text-blue-400",
+    Delivered: "bg-green-500/20 text-green-400",
+    Archived: "bg-muted text-muted-foreground",
+  };
 
   return (
     <div className="min-h-screen">
       <PageHeader breadcrumb={["Trademark Command"]} title="Dashboard" />
 
       <div className="p-8 space-y-8">
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard icon={Film} label="Total Assets" value={String(assets.length)} change={`${assets.filter(a => a.status === "Review").length} in review`} positive />
-          <StatCard icon={Radio} label="Gear Available" value={`${availableGear}/${gearItems.length}`} positive={availableGear > gearItems.length / 2} />
-          <StatCard icon={Globe} label="Build Projects" value={String(buildProjects.length)} change={`${buildProjects.filter(p => p.status === "Live").length} live`} positive />
-          <StatCard icon={Users} label="Productions" value={String(productions.length)} change={`${productions.filter(p => p.status === "Confirmed").length} confirmed`} positive />
-          <StatCard icon={HardDrive} label="Total Gear" value={String(gearItems.length)} />
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={Folder} label="Active Projects" value={String(activeProjects.length)} change={`${projects.length} total`} positive />
+          <StatCard icon={Camera} label="In Production" value={String(inProduction.length)} positive={inProduction.length > 0} />
+          <StatCard icon={Clock} label="Post-Production" value={String(inPost.length)} />
+          <StatCard icon={FileText} label="Delivered" value={String(delivered.length)} positive />
         </div>
 
+        {/* Recent Projects */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Command Centre</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {subApps.map((app, i) => (
-              <motion.div key={app.name} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "tween", ease: [0.2, 0, 0, 1], duration: 0.3, delay: i * 0.05 }}>
-                <Link to={app.path} className="tm-card p-5 flex flex-col h-full group cursor-pointer block">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"><app.icon className="w-5 h-5 text-primary" /></div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Recent Projects</h2>
+            <Link to="/projects" className="text-xs text-primary hover:underline flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => <div key={i} className="tm-card h-40 animate-pulse" />)}
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="tm-card flex flex-col items-center justify-center h-48 text-muted-foreground">
+              <Folder className="w-10 h-10 mb-3 opacity-40" />
+              <p className="text-sm">No projects yet</p>
+              <Link to="/projects" className="mt-3 text-primary text-sm hover:underline flex items-center gap-1">
+                <Plus className="w-4 h-4" /> Create your first project
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.slice(0, 6).map((project, i) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <Link to={`/projects/${project.id}`} className="block tm-card p-5 group hover:border-primary/30 transition-colors">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Folder className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium group-hover:text-primary transition-colors truncate">{project.name}</h3>
+                        <p className="text-xs text-muted-foreground">{project.type}</p>
+                      </div>
+                    </div>
+                    {project.description && (
+                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{project.description}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[project.status] || "bg-muted text-muted-foreground"}`}>
+                        {project.status}
+                      </span>
+                      {project.client && (
+                        <span className="text-xs text-muted-foreground">{project.client}</span>
+                      )}
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div>
+          <h2 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "New Project", desc: "Start a new production", icon: Plus, path: "/projects" },
+              { label: "Shot Lists", desc: "Plan your shots", icon: Camera, path: "/projects" },
+              { label: "Call Sheets", desc: "Schedule your crew", icon: ClipboardList, path: "/projects" },
+              { label: "Files & Assets", desc: "Manage deliverables", icon: FolderOpen, path: "/projects" },
+            ].map((action, i) => (
+              <motion.div key={action.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }}>
+                <Link to={action.path} className="tm-card p-5 flex items-center gap-4 group hover:border-primary/30 transition-colors block">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <action.icon className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="font-medium tracking-tight">{app.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{app.desc}</p>
-                  <p className="text-xs text-primary mt-3 tabular-nums">{app.count}</p>
+                  <div>
+                    <h3 className="text-sm font-medium">{action.label}</h3>
+                    <p className="text-xs text-muted-foreground">{action.desc}</p>
+                  </div>
                 </Link>
               </motion.div>
             ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 tm-card p-5">
-            <h2 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Recent Activity</h2>
-            {recentItems.length === 0 ? (
-              <p className="text-muted-foreground text-sm py-4">No activity yet.</p>
-            ) : (
-              <div className="space-y-0">
-                {recentItems.map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                      <div><p className="text-sm font-medium">{item.action}</p><p className="text-xs text-muted-foreground">{item.project}</p></div>
-                    </div>
-                    <div className="text-right"><p className="text-xs text-muted-foreground">{item.time}</p><p className="text-xs text-muted-foreground">{item.user}</p></div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="tm-card p-5">
-            <h2 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Summary</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Assets in Review</span><span className="text-sm font-medium tabular-nums">{assets.filter(a => a.status === "Review").length}</span></div>
-              <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Gear in Maintenance</span><span className="text-sm font-medium tabular-nums">{gearItems.filter(g => g.status === "Maintenance").length}</span></div>
-              <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Builds in Staging</span><span className="text-sm font-medium tabular-nums">{buildProjects.filter(p => p.status === "Staging").length}</span></div>
-              <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Productions Confirmed</span><span className="text-sm font-medium tabular-nums">{productions.filter(p => p.status === "Confirmed").length}</span></div>
-              <div className="flex justify-between items-center"><span className="text-sm text-muted-foreground">Reserved Gear</span><span className="text-sm font-medium tabular-nums">{gearItems.filter(g => g.status === "Reserved").length}</span></div>
-            </div>
           </div>
         </div>
       </div>
