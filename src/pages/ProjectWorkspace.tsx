@@ -1,6 +1,6 @@
-import { NavLink as RouterNavLink, useParams, Outlet } from "react-router-dom";
+import { NavLink as RouterNavLink, useParams, Outlet, Link } from "react-router-dom";
 import { useProject } from "@/hooks/useProjects";
-import { Camera, ClipboardList, FileText, FolderOpen, LayoutDashboard } from "lucide-react";
+import { Camera, ClipboardList, FileText, FolderOpen, LayoutDashboard, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
@@ -25,8 +25,11 @@ export default function ProjectWorkspace() {
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+      <div className="min-h-screen flex flex-col items-center justify-center text-muted-foreground gap-3">
         <p>Project not found</p>
+        <Link to="/projects" className="text-primary text-sm hover:underline flex items-center gap-1">
+          <ArrowLeft className="w-4 h-4" /> Back to projects
+        </Link>
       </div>
     );
   }
@@ -36,6 +39,9 @@ export default function ProjectWorkspace() {
       {/* Project sidebar */}
       <aside className="w-56 border-r border-border bg-sidebar flex flex-col shrink-0">
         <div className="p-4 border-b border-border">
+          <Link to="/projects" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2">
+            <ArrowLeft className="w-3 h-3" /> All Projects
+          </Link>
           <h2 className="text-sm font-medium truncate">{project.name}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{project.type}</p>
         </div>

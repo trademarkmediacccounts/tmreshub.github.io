@@ -1,14 +1,21 @@
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { Project, useUpdateProject } from "@/hooks/useProjects";
 import { useShots } from "@/hooks/useShots";
 import { useCallSheets } from "@/hooks/useCallSheets";
 import { useScriptBreakdowns } from "@/hooks/useScriptBreakdowns";
 import { useProjectAssets } from "@/hooks/useProjectAssets";
 import { PageHeader } from "@/components/PageHeader";
-import { Camera, ClipboardList, FileText, FolderOpen, Calendar, Users } from "lucide-react";
+import { Camera, ClipboardList, FileText, FolderOpen, ArrowRight, Edit } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 const STATUSES = ["Pre-Production", "Production", "Post-Production", "Delivered", "Archived"];
+const PROJECT_TYPES = ["Commercial", "Music Video", "Documentary", "Corporate", "Short Film", "Live Event", "Social Content"];
 
 export default function ProjectOverview() {
   const { project } = useOutletContext<{ project: Project }>();
@@ -17,13 +24,37 @@ export default function ProjectOverview() {
   const { data: breakdowns = [] } = useScriptBreakdowns(project.id);
   const { data: assets = [] } = useProjectAssets(project.id);
   const updateProject = useUpdateProject();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: project.name,
+    description: project.description || "",
+    type: project.type,
+    client: project.client || "",
+    start_date: project.start_date || "",
+    end_date: project.end_date || "",
+  });
 
-  const stats = [
-    { icon: Camera, label: "Shots", value: shots.length, color: "text-primary" },
-    { icon: ClipboardList, label: "Call Sheets", value: callSheets.length, color: "text-blue-400" },
-    { icon: FileText, label: "Breakdown Elements", value: breakdowns.length, color: "text-yellow-400" },
-    { icon: FolderOpen, label: "Files", value: assets.length, color: "text-green-400" },
+  const handleSave = () => {
+    updateProject.mutate({
+      id: project.id,
+      name: editForm.name,
+      description: editForm.description || null,
+      type: editForm.type,
+      client: editForm.client || null,
+      start_date: editForm.start_date || null,
+      end_date: editForm.end_date || null,
+    }, { onSuccess: () => setEditOpen(false) });
+  };
+
+  const modules = [
+    { icon: Camera, label: "Shot List", path: "shots", count: shots.length, desc: "Plan and organize shots" },
+    { icon: ClipboardList, label: "Call Sheets", path: "schedule", count: callSheets.length, desc: "Schedule crew & locations" },
+    { icon: FileText, label: "Script Breakdown", path: "breakdown", count: breakdowns.length, desc: "Break down script elements" },
+    { icon: FolderOpen, label: "Files & Assets", path: "files", count: assets.length, desc: "Manage project files" },
   ];
+
+  const shotsDone = shots.filter(s => s.status === "Done").length;
+  const shotsProgress = shots.length > 0 ? Math.round((shotsDone / shots.length) * 100) : 0;
 
   return (
     <div>
@@ -31,14 +62,19 @@ export default function ProjectOverview() {
         breadcrumb={["Projects", project.name]}
         title="Overview"
         action={
-          <Select value={project.status} onValueChange={v => updateProject.mutate({ id: project.id, status: v })}>
-            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-            <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setEditForm({ name: project.name, description: project.description || "", type: project.type, client: project.client || "", start_date: project.start_date || "", end_date: project.end_date || "" }); setEditOpen(true); }} className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50">
+              <Edit className="w-4 h-4" />
+            </button>
+            <Select value={project.status} onValueChange={v => updateProject.mutate({ id: project.id, status: v })}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
         }
       />
       <div className="p-8 space-y-8">
-        {/* Info */}
+        {/* Project Info */}
         <div className="tm-card p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
@@ -51,29 +87,92 @@ export default function ProjectOverview() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Start Date</p>
-              <p className="text-sm font-medium">{project.start_date || "—"}</p>
+              <p className="text-sm font-medium">{project.start_date ? new Date(project.start_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">End Date</p>
-              <p className="text-sm font-medium">{project.end_date || "—"}</p>
+              <p className="text-sm font-medium">{project.end_date ? new Date(project.end_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}</p>
             </div>
           </div>
           {project.description && <p className="text-sm text-muted-foreground mt-4 border-t border-border pt-4">{project.description}</p>}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map(s => (
-            <div key={s.label} className="tm-card p-5">
-              <div className="flex items-center gap-3 mb-2">
-                <s.icon className={`w-5 h-5 ${s.color}`} />
-                <span className="text-xs text-muted-foreground">{s.label}</span>
-              </div>
-              <p className="text-2xl font-semibold tabular-nums">{s.value}</p>
+        {/* Shot Progress */}
+        {shots.length > 0 && (
+          <div className="tm-card p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">Shot Progress</h3>
+              <span className="text-xs text-muted-foreground">{shotsDone}/{shots.length} complete</span>
             </div>
-          ))}
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${shotsProgress}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Module Cards */}
+        <div>
+          <h2 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Modules</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {modules.map((mod, i) => (
+              <motion.div
+                key={mod.path}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Link to={mod.path} className="tm-card p-5 flex items-center gap-4 group hover:border-primary/30 transition-colors block">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <mod.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium group-hover:text-primary transition-colors">{mod.label}</h3>
+                    <p className="text-xs text-muted-foreground">{mod.desc}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold tabular-nums text-primary">{mod.count}</span>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Project</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <Input placeholder="Project name" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+            <Textarea placeholder="Description" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
+            <Select value={editForm.type} onValueChange={v => setEditForm(f => ({ ...f, type: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{PROJECT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            </Select>
+            <Input placeholder="Client" value={editForm.client} onChange={e => setEditForm(f => ({ ...f, client: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Start Date</label>
+                <Input type="date" value={editForm.start_date} onChange={e => setEditForm(f => ({ ...f, start_date: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">End Date</label>
+                <Input type="date" value={editForm.end_date} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))} />
+              </div>
+            </div>
+            <Button onClick={handleSave} disabled={!editForm.name.trim() || updateProject.isPending} className="w-full">
+              {updateProject.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
