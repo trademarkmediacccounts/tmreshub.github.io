@@ -1,15 +1,49 @@
 import { NavLink as RouterNavLink, useParams, Outlet, Link } from "react-router-dom";
 import { useProject } from "@/hooks/useProjects";
-import { Camera, ClipboardList, FileText, FolderOpen, LayoutDashboard, ArrowLeft } from "lucide-react";
+import { Camera, ClipboardList, FileText, FolderOpen, LayoutDashboard, ArrowLeft, Globe, Users, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const sidebarItems = [
-  { icon: LayoutDashboard, path: "", label: "Overview", end: true },
+interface SidebarItem {
+  icon: React.ComponentType<{ className?: string }>;
+  path: string;
+  label: string;
+  end?: boolean;
+}
+
+const overviewItem: SidebarItem = { icon: LayoutDashboard, path: "", label: "Overview", end: true };
+
+// Video production types: StudioBinder-style tools
+const videoModules: SidebarItem[] = [
   { icon: Camera, path: "shots", label: "Shot List" },
   { icon: ClipboardList, path: "schedule", label: "Call Sheets" },
   { icon: FileText, path: "breakdown", label: "Script Breakdown" },
   { icon: FolderOpen, path: "files", label: "Files & Assets" },
 ];
+
+// Web project types: staging + file management
+const webModules: SidebarItem[] = [
+  { icon: Globe, path: "staging", label: "Web Staging" },
+  { icon: FolderOpen, path: "files", label: "Files & Assets" },
+];
+
+// Production / Live Event types: crew, logistics, resources
+const productionModules: SidebarItem[] = [
+  { icon: Users, path: "schedule", label: "Call Sheets" },
+  { icon: Package, path: "resources", label: "Resources" },
+  { icon: FolderOpen, path: "files", label: "Files & Assets" },
+];
+
+const VIDEO_TYPES = ["Commercial", "Music Video", "Documentary", "Short Film", "Social Content"];
+const WEB_TYPES = ["Corporate"];
+const PRODUCTION_TYPES = ["Live Event"];
+
+function getModulesForType(type: string): SidebarItem[] {
+  if (VIDEO_TYPES.includes(type)) return videoModules;
+  if (WEB_TYPES.includes(type)) return webModules;
+  if (PRODUCTION_TYPES.includes(type)) return productionModules;
+  // Default: show all available modules
+  return videoModules;
+}
 
 export default function ProjectWorkspace() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -33,6 +67,8 @@ export default function ProjectWorkspace() {
       </div>
     );
   }
+
+  const sidebarItems = [overviewItem, ...getModulesForType(project.type)];
 
   return (
     <div className="min-h-screen flex">

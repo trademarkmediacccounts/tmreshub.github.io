@@ -21,6 +21,8 @@ import ShotListPage from "./pages/project/ShotListPage";
 import CallSheetsPage from "./pages/project/CallSheetsPage";
 import ScriptBreakdownPage from "./pages/project/ScriptBreakdownPage";
 import ProjectFilesPage from "./pages/project/ProjectFilesPage";
+import WebStagingPage from "./pages/project/WebStagingPage";
+import ResourcesPage from "./pages/project/ResourcesPage";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,8 @@ function ProtectedRoutes() {
           <Route path="schedule" element={<CallSheetsPage />} />
           <Route path="breakdown" element={<ScriptBreakdownPage />} />
           <Route path="files" element={<ProjectFilesPage />} />
+          <Route path="staging" element={<WebStagingPage />} />
+          <Route path="resources" element={<ResourcesPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
