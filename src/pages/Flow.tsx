@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
-import { Plus, DollarSign, Calendar, User, MoreHorizontal, Trash2, Edit, Link as LinkIcon } from "lucide-react";
+import { Plus, DollarSign, Calendar, User, MoreHorizontal, Trash2, Edit, Link as LinkIcon, FolderPlus } from "lucide-react";
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead, Lead } from "@/hooks/useLeads";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjects, useCreateProject } from "@/hooks/useProjects";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const stages = ["Lead", "Proposal", "Negotiation", "Won", "Lost"];
 
@@ -31,6 +31,21 @@ export default function Flow() {
   const createLead = useCreateLead();
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
+  const createProject = useCreateProject();
+  const navigate = useNavigate();
+
+  const createProjectFromLead = (lead: Lead) => {
+    createProject.mutate({
+      name: lead.service || lead.company || lead.name,
+      client: lead.company || null,
+      description: lead.notes || null,
+    } as any, {
+      onSuccess: (project) => {
+        updateLead.mutate({ id: lead.id, project_id: project.id });
+        navigate(`/projects/${project.id}`);
+      },
+    });
+  };
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -147,6 +162,11 @@ export default function Flow() {
                                 Move to {s}
                               </DropdownMenuItem>
                             ))}
+                            {!lead.project_id && (
+                              <DropdownMenuItem onClick={e => { e.stopPropagation(); createProjectFromLead(lead); }}>
+                                <FolderPlus className="w-4 h-4 mr-2" /> Create Project
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="text-destructive" onClick={e => { e.stopPropagation(); setDeleteTarget(lead.id); }}>
                               <Trash2 className="w-4 h-4 mr-2" /> Delete
                             </DropdownMenuItem>
@@ -213,6 +233,11 @@ export default function Flow() {
             <Button onClick={handleSave} disabled={!form.name.trim() || createLead.isPending || updateLead.isPending} className="w-full">
               {(createLead.isPending || updateLead.isPending) ? "Saving…" : editingLead ? "Save Changes" : "Create Lead"}
             </Button>
+            {editingLead && !editingLead.project_id && (
+              <Button variant="outline" onClick={() => { setDialogOpen(false); createProjectFromLead(editingLead); }} disabled={createProject.isPending} className="w-full flex items-center gap-2">
+                <FolderPlus className="w-4 h-4" /> Create Project from Lead
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
