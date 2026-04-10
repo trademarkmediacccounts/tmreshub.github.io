@@ -21,6 +21,8 @@ import ShotListPage from "./pages/project/ShotListPage";
 import CallSheetsPage from "./pages/project/CallSheetsPage";
 import ScriptBreakdownPage from "./pages/project/ScriptBreakdownPage";
 import ProjectFilesPage from "./pages/project/ProjectFilesPage";
+import WebStagingPage from "./pages/project/WebStagingPage";
+import ResourcesPage from "./pages/project/ResourcesPage";
 
 const queryClient = new QueryClient();
 
