@@ -5,7 +5,7 @@ import { useCallSheets } from "@/hooks/useCallSheets";
 import { useScriptBreakdowns } from "@/hooks/useScriptBreakdowns";
 import { useProjectAssets } from "@/hooks/useProjectAssets";
 import { PageHeader } from "@/components/PageHeader";
-import { Camera, ClipboardList, FileText, FolderOpen, ArrowRight, Edit } from "lucide-react";
+import { Camera, ClipboardList, FileText, FolderOpen, ArrowRight, Edit, Globe, Users, Package } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -16,6 +16,10 @@ import { Button } from "@/components/ui/button";
 
 const STATUSES = ["Pre-Production", "Production", "Post-Production", "Delivered", "Archived"];
 const PROJECT_TYPES = ["Commercial", "Music Video", "Documentary", "Corporate", "Short Film", "Live Event", "Social Content"];
+
+const VIDEO_TYPES = ["Commercial", "Music Video", "Documentary", "Short Film", "Social Content"];
+const WEB_TYPES = ["Corporate"];
+const PRODUCTION_TYPES = ["Live Event"];
 
 export default function ProjectOverview() {
   const { project } = useOutletContext<{ project: Project }>();
@@ -46,12 +50,28 @@ export default function ProjectOverview() {
     }, { onSuccess: () => setEditOpen(false) });
   };
 
-  const modules = [
-    { icon: Camera, label: "Shot List", path: "shots", count: shots.length, desc: "Plan and organize shots" },
-    { icon: ClipboardList, label: "Call Sheets", path: "schedule", count: callSheets.length, desc: "Schedule crew & locations" },
-    { icon: FileText, label: "Script Breakdown", path: "breakdown", count: breakdowns.length, desc: "Break down script elements" },
-    { icon: FolderOpen, label: "Files & Assets", path: "files", count: assets.length, desc: "Manage project files" },
-  ];
+  // Build modules based on project type
+  const allModules = {
+    shots: { icon: Camera, label: "Shot List", path: "shots", count: shots.length, desc: "Plan and organize shots" },
+    schedule: { icon: ClipboardList, label: "Call Sheets", path: "schedule", count: callSheets.length, desc: "Schedule crew & locations" },
+    breakdown: { icon: FileText, label: "Script Breakdown", path: "breakdown", count: breakdowns.length, desc: "Break down script elements" },
+    files: { icon: FolderOpen, label: "Files & Assets", path: "files", count: assets.length, desc: "Manage project files" },
+    staging: { icon: Globe, label: "Web Staging", path: "staging", count: 0, desc: "Manage staging environments" },
+    resources: { icon: Package, label: "Resources", path: "resources", count: 0, desc: "Track equipment & resources" },
+  };
+
+  let moduleKeys: string[];
+  if (VIDEO_TYPES.includes(project.type)) {
+    moduleKeys = ["shots", "schedule", "breakdown", "files"];
+  } else if (WEB_TYPES.includes(project.type)) {
+    moduleKeys = ["staging", "files"];
+  } else if (PRODUCTION_TYPES.includes(project.type)) {
+    moduleKeys = ["schedule", "resources", "files"];
+  } else {
+    moduleKeys = ["shots", "schedule", "breakdown", "files"];
+  }
+
+  const modules = moduleKeys.map(k => allModules[k as keyof typeof allModules]);
 
   const shotsDone = shots.filter(s => s.status === "Done").length;
   const shotsProgress = shots.length > 0 ? Math.round((shotsDone / shots.length) * 100) : 0;
@@ -97,8 +117,8 @@ export default function ProjectOverview() {
           {project.description && <p className="text-sm text-muted-foreground mt-4 border-t border-border pt-4">{project.description}</p>}
         </div>
 
-        {/* Shot Progress */}
-        {shots.length > 0 && (
+        {/* Shot Progress (video projects only) */}
+        {VIDEO_TYPES.includes(project.type) && shots.length > 0 && (
           <div className="tm-card p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium">Shot Progress</h3>
