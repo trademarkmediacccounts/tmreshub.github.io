@@ -58,6 +58,8 @@ function ProtectedRoutes() {
           <Route path="schedule" element={<CallSheetsPage />} />
           <Route path="breakdown" element={<ScriptBreakdownPage />} />
           <Route path="files" element={<ProjectFilesPage />} />
+          <Route path="staging" element={<WebStagingPage />} />
+          <Route path="resources" element={<ResourcesPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
