@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 
 const SHOT_TYPES = ["Wide", "Medium", "Close-up", "Extreme Close-up", "Over the Shoulder", "POV", "Aerial", "Tracking", "Establishing"];
