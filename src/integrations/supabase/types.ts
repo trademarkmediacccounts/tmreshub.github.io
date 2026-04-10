@@ -231,6 +231,59 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          company: string
+          created_at: string
+          currency: string
+          id: string
+          name: string
+          notes: string | null
+          project_id: string | null
+          service: string
+          stage: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          company?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          name: string
+          notes?: string | null
+          project_id?: string | null
+          service?: string
+          stage?: string
+          updated_at?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          project_id?: string | null
+          service?: string
+          stage?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       productions: {
         Row: {
           created_at: string
