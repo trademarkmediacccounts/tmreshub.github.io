@@ -367,6 +367,54 @@ export type Database = {
           },
         ]
       }
+      project_resources: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          cost: number
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          project_id: string
+          quantity: number
+          status: string
+          supplier: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          project_id: string
+          quantity?: number
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          project_id?: string
+          quantity?: number
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           client: string | null
@@ -514,6 +562,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      staging_environments: {
+        Row: {
+          branch: string
+          created_at: string
+          environment: string
+          id: string
+          last_deploy: string | null
+          name: string
+          notes: string | null
+          project_id: string
+          status: string
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          branch?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          last_deploy?: string | null
+          name: string
+          notes?: string | null
+          project_id: string
+          status?: string
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          last_deploy?: string | null
+          name?: string
+          notes?: string | null
+          project_id?: string
+          status?: string
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
