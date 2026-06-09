@@ -1,3 +1,1 @@
-- [TM Hub camelCase convention](tm-hub-camelcase.md) — all API fields are camelCase; pages/hooks must never use snake_case field names
-- [TM Hub stack](tm-hub-stack.md) — pnpm workspace, React+Vite+Tailwind v3(postcss), Express 5, Drizzle/Postgres, Clerk auth, react-router-dom
-- [TM Hub Mobile companion app](tm-hub-mobile.md) — Expo mobile setup: port 8082 (8081 taken), Clerk Expo v3 auth API, workflow not in artifact registry
+- [GDTF parser spec](gdtf-parser-spec.md) — Offset is comma-separated; footprint = max Offset value; Beam has all physical specs

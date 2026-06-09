@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, Search, FileUp, Zap, X, Upload, AlertCircle, Check } from "lucide-react";
+import { Plus, Trash2, Edit, Search, FileUp, Zap, X, AlertCircle, Check, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import JSZip from "jszip";
@@ -20,13 +20,63 @@ const emptyForm = {
 };
 type FormState = typeof emptyForm;
 
-interface ParsedGdtfMode { name: string; footprint: number }
-interface ParsedGdtf {
-  manufacturer: string; model: string; fixtureTypeId: string;
-  modes: ParsedGdtfMode[];
+interface ParsedGdtfMode {
+  name: string;
+  footprint: number;           // max Offset value across Break-1 channels
+  breaks: Record<number, number>; // breakNum → max offset (for multi-break display)
 }
 
-// ─── GDTF client-side parser ────────────────────────────────────────────────
+interface ParsedGdtfSpecs {
+  lampType?: string;           // LED / Discharge / Halogen / Tungsten
+  beamType?: string;           // Spot / Wash / Fresnel / etc.
+  beamAngleDeg?: number;       // Beam@BeamAngle — unit: degree
+  fieldAngleDeg?: number;      // Beam@FieldAngle — unit: degree
+  powerW?: number;             // Beam@PowerConsumption — unit: Watt
+  luminousFlux?: number;       // Beam@LuminousFlux — unit: lumen
+  colorTempK?: number;         // Beam@ColorTemperature — unit: K
+  cri?: number;                // Beam@ColorRenderingIndex
+  weightKg?: number;           // Properties/Weight@Value — unit: kg
+  devicePowerW?: number;       // Properties/PowerConsumption@Value — unit: Watt
+}
+
+interface ParsedGdtf {
+  manufacturer: string;
+  model: string;
+  fixtureTypeId: string;
+  modes: ParsedGdtfMode[];
+  specs: ParsedGdtfSpecs;
+}
+
+// ─── GDTF spec-correct parser ────────────────────────────────────────────────
+// Spec: https://github.com/mvrdevelopment/spec/blob/main/gdtf-spec.md
+
+/** Parse Offset attr "1,2,3" → max value; "None" → 0 */
+function parseOffset(offset: string | null): number {
+  if (!offset || offset.trim() === "None") return 0;
+  return Math.max(0, ...offset.split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n)));
+}
+
+/** Calculate per-break footprints from all DMXChannel elements in a DMXMode */
+function calcBreaks(modeEl: Element): Record<number, number> {
+  const breaks: Record<number, number> = {};
+  modeEl.querySelectorAll("DMXChannel").forEach(ch => {
+    const rawBreak = ch.getAttribute("DMXBreak") ?? "1";
+    // "Overwrite" is a special value meaning the break is overwritten by GeometryReference
+    const breakNum = rawBreak === "Overwrite" ? 1 : (parseInt(rawBreak, 10) || 1);
+    const maxOff = parseOffset(ch.getAttribute("Offset"));
+    if (maxOff > 0) {
+      breaks[breakNum] = Math.max(breaks[breakNum] ?? 0, maxOff);
+    }
+  });
+  return breaks;
+}
+
+/** Extract a float attribute, returning undefined if missing or NaN */
+function fAttr(el: Element | null, name: string): number | undefined {
+  if (!el) return undefined;
+  const v = parseFloat(el.getAttribute(name) ?? "");
+  return isNaN(v) ? undefined : v;
+}
 
 async function parseGdtfFile(file: File): Promise<ParsedGdtf> {
   const buffer = await file.arrayBuffer();
@@ -40,7 +90,7 @@ async function parseGdtfFile(file: File): Promise<ParsedGdtf> {
 
   const doc = new DOMParser().parseFromString(xmlStr, "text/xml");
   const parseErr = doc.querySelector("parsererror");
-  if (parseErr) throw new Error("Failed to parse description.xml: " + parseErr.textContent?.slice(0, 80));
+  if (parseErr) throw new Error("Failed to parse description.xml: " + (parseErr.textContent ?? "").slice(0, 100));
 
   const ft = doc.querySelector("FixtureType");
   if (!ft) throw new Error("No <FixtureType> element in description.xml");
@@ -49,12 +99,82 @@ async function parseGdtfFile(file: File): Promise<ParsedGdtf> {
   const model = ft.getAttribute("Name") ?? ft.getAttribute("ShortName") ?? "";
   const fixtureTypeId = ft.getAttribute("FixtureTypeID") ?? "";
 
-  const modes: ParsedGdtfMode[] = Array.from(doc.querySelectorAll("DMXMode")).map(m => ({
-    name: m.getAttribute("Name") ?? "Default",
-    footprint: m.querySelectorAll("DMXChannel").length,
-  }));
+  // ── Physical specs from first <Beam> geometry element ──────────────────────
+  // Beam is inside <Geometries> and holds light-source physical properties.
+  // (spec table 41: BeamAngle, FieldAngle, PowerConsumption, LuminousFlux,
+  //  ColorTemperature, LampType, BeamType, ColorRenderingIndex)
+  const beam = doc.querySelector("Beam");
+  const specs: ParsedGdtfSpecs = {
+    lampType:      beam?.getAttribute("LampType")           ?? undefined,
+    beamType:      beam?.getAttribute("BeamType")           ?? undefined,
+    beamAngleDeg:  fAttr(beam, "BeamAngle"),
+    fieldAngleDeg: fAttr(beam, "FieldAngle"),
+    powerW:        fAttr(beam, "PowerConsumption"),
+    luminousFlux:  fAttr(beam, "LuminousFlux"),
+    colorTempK:    fAttr(beam, "ColorTemperature"),
+    cri:           beam ? (parseInt(beam.getAttribute("ColorRenderingIndex") ?? "") || undefined) : undefined,
+    // Properties/Weight: <Weight Value="19.6"/> — unit: kg (spec table 30)
+    weightKg:      fAttr(doc.querySelector("Properties > Weight, Properties Weight"), "Value"),
+    // Properties/PowerConsumption: <PowerConsumption Value="940"/> — total device power in W
+    // This is distinct from Beam@PowerConsumption (spec table 28)
+    devicePowerW:  fAttr(doc.querySelector("Properties > PowerConsumption, Properties PowerConsumption"), "Value"),
+  };
 
-  return { manufacturer, model, fixtureTypeId, modes };
+  // ── DMX modes with spec-correct footprint calculation ─────────────────────
+  // Spec (table 58): Offset is "Array of Int" separated by commas.
+  // Offset="1,2" → 16-bit channel using addresses 1 (MSB) and 2 (LSB).
+  // Offset="None" → virtual channel with no DMX address.
+  // Footprint for a break = highest Offset number used in that break.
+  const modes: ParsedGdtfMode[] = Array.from(doc.querySelectorAll("DMXMode")).map(m => {
+    const breaks = calcBreaks(m);
+    const footprint = breaks[1] ?? Object.values(breaks)[0] ?? 0;
+    return {
+      name: m.getAttribute("Name") ?? "Default",
+      footprint,
+      breaks,
+    };
+  });
+
+  return { manufacturer, model, fixtureTypeId, modes, specs };
+}
+
+// ─── Formatting helpers ───────────────────────────────────────────────────────
+
+function fmtAngle(beam?: number, field?: number): string {
+  if (beam == null && field == null) return "";
+  if (beam != null && field != null && Math.abs(beam - field) > 0.5) {
+    return `${+beam.toFixed(1)}°–${+field.toFixed(1)}°`;
+  }
+  const v = beam ?? field;
+  return `${+(v!).toFixed(1)}°`;
+}
+
+function fmtPower(deviceW?: number, beamW?: number): string {
+  const w = deviceW ?? beamW;
+  if (w == null) return "";
+  return `${Math.round(w)}W`;
+}
+
+function fmtWeight(kg?: number): string {
+  if (kg == null || isNaN(kg) || kg === 0) return "";
+  return `${kg} kg`;
+}
+
+function fmtColorTemp(k?: number): string {
+  if (k == null) return "";
+  return `${Math.round(k)}K`;
+}
+
+function fmtFlux(lm?: number): string {
+  if (lm == null) return "";
+  if (lm >= 1000) return `${(lm / 1000).toFixed(1).replace(/\.0$/, "")} klm`;
+  return `${Math.round(lm)} lm`;
+}
+
+function fmtBreaks(mode: ParsedGdtfMode): string {
+  const entries = Object.entries(mode.breaks);
+  if (entries.length <= 1) return `${mode.footprint} ch`;
+  return entries.map(([b, ch]) => `Break ${b}: ${ch} ch`).join(" + ");
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -83,8 +203,8 @@ function FixtureForm({ value, onChange }: { value: FormState; onChange: (f: Form
         <Input type="number" value={value.dmxFootprint} onChange={set("dmxFootprint")} placeholder="e.g. 28" />
       </div>
       <div>
-        <label className="text-xs text-muted-foreground mb-1 block">Beam Angle</label>
-        <Input value={value.beamAngle} onChange={set("beamAngle")} placeholder="e.g. 7°–48°" />
+        <label className="text-xs text-muted-foreground mb-1 block">Beam / Field Angle</label>
+        <Input value={value.beamAngle} onChange={set("beamAngle")} placeholder="e.g. 7°–50°" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Color Temp</label>
@@ -96,12 +216,51 @@ function FixtureForm({ value, onChange }: { value: FormState; onChange: (f: Form
       </div>
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Weight</label>
-        <Input value={value.weight} onChange={set("weight")} placeholder="e.g. 19.6kg" />
+        <Input value={value.weight} onChange={set("weight")} placeholder="e.g. 19.6 kg" />
       </div>
       <div className="col-span-2">
         <label className="text-xs text-muted-foreground mb-1 block">Notes</label>
         <Input value={value.notes} onChange={set("notes")} placeholder="Additional notes..." />
       </div>
+    </div>
+  );
+}
+
+/** Compact specs pill row shown inside the parsed GDTF card */
+function SpecPills({ specs, mode }: { specs: ParsedGdtfSpecs; mode?: ParsedGdtfMode }) {
+  const pills: { label: string; value: string }[] = [];
+
+  if (mode) pills.push({ label: "DMX", value: fmtBreaks(mode) });
+
+  const angle = fmtAngle(specs.beamAngleDeg, specs.fieldAngleDeg);
+  if (angle) pills.push({ label: specs.beamType ?? "Beam", value: angle });
+
+  const power = fmtPower(specs.devicePowerW, specs.powerW);
+  if (power) pills.push({ label: "Power", value: power });
+
+  const flux = fmtFlux(specs.luminousFlux);
+  if (flux) pills.push({ label: "Flux", value: flux });
+
+  const ct = fmtColorTemp(specs.colorTempK);
+  if (ct) pills.push({ label: "CCT", value: ct });
+
+  if (specs.cri != null) pills.push({ label: "CRI", value: `${specs.cri}` });
+
+  const wt = fmtWeight(specs.weightKg);
+  if (wt) pills.push({ label: "Weight", value: wt });
+
+  if (specs.lampType) pills.push({ label: "Source", value: specs.lampType });
+
+  if (pills.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {pills.map(p => (
+        <span key={p.label} className="text-[11px] bg-secondary/80 border border-border/50 px-2 py-0.5 rounded-full">
+          <span className="text-muted-foreground/60">{p.label} </span>
+          <span className="text-foreground font-medium">{p.value}</span>
+        </span>
+      ))}
     </div>
   );
 }
@@ -122,7 +281,7 @@ export default function FixtureLibraryPage() {
   const [editTarget, setEditTarget] = useState<ShowFixture | null>(null);
   const [form, setForm] = useState(emptyForm);
 
-  // GDTF search dialog
+  // GDTF import dialog
   const [gdtfOpen, setGdtfOpen] = useState(false);
   const [gdtfQuery, setGdtfQuery] = useState("");
 
@@ -135,15 +294,12 @@ export default function FixtureLibraryPage() {
   // Library search
   const [localSearch, setLocalSearch] = useState("");
 
-  const { data: gdtfResults = [], isFetching: gdtfLoading, isError: gdtfError } = useGdtfSearch(gdtfQuery);
+  const { data: gdtfResults = [], isFetching: gdtfLoading, isError: gdtfError } =
+    useGdtfSearch(gdtfQuery);
 
-  // ── Helpers ──
+  // ── Helpers ──────────────────────────────────────────────────────────
 
-  const openCreate = () => {
-    setEditTarget(null);
-    setForm(emptyForm);
-    setDialogOpen(true);
-  };
+  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setDialogOpen(true); };
 
   const openEdit = (f: ShowFixture) => {
     setEditTarget(f);
@@ -176,7 +332,7 @@ export default function FixtureLibraryPage() {
     }
   };
 
-  // ── GDTF file parsing ──
+  // ── GDTF file parsing ─────────────────────────────────────────────
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,20 +352,27 @@ export default function FixtureLibraryPage() {
       toast.error("Could not parse GDTF file: " + err.message);
     } finally {
       setParsing(false);
-      // reset input so same file can be re-selected
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, []);
 
+  const selectedModeObj = parsedGdtf?.modes.find(m => m.name === selectedMode) ?? parsedGdtf?.modes[0];
+
   const applyParsedGdtf = () => {
     if (!parsedGdtf) return;
-    const modeObj = parsedGdtf.modes.find(m => m.name === selectedMode) ?? parsedGdtf.modes[0];
+    const mode = selectedModeObj;
+    const { specs } = parsedGdtf;
+
     setForm(prev => ({
       ...prev,
       manufacturer: parsedGdtf.manufacturer || prev.manufacturer,
-      model: parsedGdtf.model || prev.model,
-      mode: modeObj?.name ?? prev.mode,
-      dmxFootprint: modeObj?.footprint ? String(modeObj.footprint) : prev.dmxFootprint,
+      model:        parsedGdtf.model        || prev.model,
+      mode:         mode?.name              ?? prev.mode,
+      dmxFootprint: mode?.footprint ? String(mode.footprint) : prev.dmxFootprint,
+      beamAngle:    fmtAngle(specs.beamAngleDeg, specs.fieldAngleDeg) || prev.beamAngle,
+      colorTemp:    fmtColorTemp(specs.colorTempK)                    || prev.colorTemp,
+      power:        fmtPower(specs.devicePowerW, specs.powerW)        || prev.power,
+      weight:       fmtWeight(specs.weightKg)                         || prev.weight,
     }));
     setParsedGdtf(null);
     setGdtfOpen(false);
@@ -217,32 +380,25 @@ export default function FixtureLibraryPage() {
     toast.success("Fixture data imported — review and save");
   };
 
-  // ── GDTF search import ──
+  // ── GDTF search import ────────────────────────────────────────────
 
   const importFromSearch = (f: GdtfFixture) => {
-    // Normalise across possible field name variations
-    const mfr = f.manufacturer ?? f.Manufacturer ?? f.vendor ?? "";
+    const mfr  = f.manufacturer ?? f.Manufacturer ?? f.vendor ?? "";
     const name = f.name ?? f.Name ?? f.fixture_name ?? f.FixtureName ?? "";
-    const ruid = f.fixture_type_id ?? f.FixtureTypeID ?? f.id ?? "";
-    setForm(prev => ({
-      ...prev,
-      manufacturer: mfr || prev.manufacturer,
-      model: name || prev.model,
-    }));
+    setForm(prev => ({ ...prev, manufacturer: mfr || prev.manufacturer, model: name || prev.model }));
     setGdtfOpen(false);
     setDialogOpen(true);
   };
 
-  // ── Filtered library ──
+  // ── Filtered library ──────────────────────────────────────────────
 
   const filtered = localSearch
     ? fixtures.filter(f =>
         f.manufacturer.toLowerCase().includes(localSearch.toLowerCase()) ||
-        f.model.toLowerCase().includes(localSearch.toLowerCase())
-      )
+        f.model.toLowerCase().includes(localSearch.toLowerCase()))
     : fixtures;
 
-  // ─── Render ──────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
@@ -252,12 +408,10 @@ export default function FixtureLibraryPage() {
         action={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => { setParsedGdtf(null); setGdtfOpen(true); }}>
-              <FileUp className="w-4 h-4 mr-2" />
-              GDTF Import
+              <FileUp className="w-4 h-4 mr-2" />GDTF Import
             </Button>
             <Button size="sm" onClick={openCreate}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Fixture
+              <Plus className="w-4 h-4 mr-2" />Add Fixture
             </Button>
           </div>
         }
@@ -300,22 +454,26 @@ export default function FixtureLibraryPage() {
                     <p className="text-xs text-muted-foreground truncate">{f.manufacturer}</p>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
-                    <button onClick={() => openEdit(f)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                    <button onClick={() => openEdit(f)}
+                      className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
                       <Edit className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => deleteFixture.mutate(f.id)} className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
+                    <button onClick={() => deleteFixture.mutate(f.id)}
+                      className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {f.mode && <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{f.mode}</span>}
-                  {f.dmxFootprint && <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{f.dmxFootprint}ch</span>}
+                  {f.dmxFootprint != null && <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{f.dmxFootprint} ch</span>}
                   {f.power && <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{f.power}</span>}
                   {f.beamAngle && <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{f.beamAngle}</span>}
+                  {f.colorTemp && <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{f.colorTemp}</span>}
+                  {f.weight && <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground">{f.weight}</span>}
                 </div>
                 {f.gdtfManufacturer && (
-                  <p className="text-[10px] text-muted-foreground/40 mt-2 truncate">
+                  <p className="text-[10px] text-muted-foreground/40 mt-2 truncate font-mono">
                     GDTF · {f.gdtfManufacturer} / {f.gdtfName}
                   </p>
                 )}
@@ -325,7 +483,7 @@ export default function FixtureLibraryPage() {
         </div>
       )}
 
-      {/* ── Add / Edit dialog ───────────────────────────────────────────── */}
+      {/* ── Add / Edit dialog ──────────────────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -341,36 +499,31 @@ export default function FixtureLibraryPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── GDTF Import dialog ──────────────────────────────────────────── */}
+      {/* ── GDTF Import dialog ─────────────────────────────────────────────── */}
       <Dialog open={gdtfOpen} onOpenChange={open => { if (!open) { setParsedGdtf(null); setGdtfQuery(""); } setGdtfOpen(open); }}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileUp className="w-5 h-5 text-primary" />
-              GDTF Import
+              <FileUp className="w-5 h-5 text-primary" />GDTF Import
             </DialogTitle>
             <DialogDescription>
-              Upload a .gdtf file to extract fixture data automatically, or search the GDTF Share library.
+              Upload a .gdtf file to extract fixture specifications automatically, or search the GDTF Share library.
             </DialogDescription>
           </DialogHeader>
 
-          {/* ── File upload section ── */}
+          {/* ── File upload ── */}
           <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
             <p className="text-sm font-medium flex items-center gap-2">
-              <Upload className="w-4 h-4 text-primary" />
+              <Lightbulb className="w-4 h-4 text-primary" />
               Upload .gdtf file
               <span className="text-xs font-normal text-muted-foreground ml-auto">Recommended</span>
             </p>
 
-            <input ref={fileInputRef} type="file" accept=".gdtf" className="hidden"
-              onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" accept=".gdtf" className="hidden" onChange={handleFileChange} />
 
             {!parsedGdtf ? (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={parsing}
-                className="w-full border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 hover:border-primary/50 hover:bg-secondary/50 transition-colors cursor-pointer disabled:opacity-50"
-              >
+              <button onClick={() => fileInputRef.current?.click()} disabled={parsing}
+                className="w-full border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 hover:border-primary/50 hover:bg-secondary/50 transition-colors cursor-pointer disabled:opacity-50">
                 {parsing ? (
                   <>
                     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -380,20 +533,21 @@ export default function FixtureLibraryPage() {
                   <>
                     <FileUp className="w-8 h-8 text-muted-foreground/50" />
                     <span className="text-sm text-muted-foreground">Click to choose a .gdtf file</span>
-                    <span className="text-xs text-muted-foreground/50">Extracts manufacturer, model, DMX modes & footprint</span>
+                    <span className="text-xs text-muted-foreground/50">Extracts manufacturer, model, DMX modes, footprint &amp; full specifications</span>
                   </>
                 )}
               </button>
             ) : (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                {/* Header */}
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm">{parsedGdtf.model}</p>
                     <p className="text-xs text-muted-foreground">{parsedGdtf.manufacturer}</p>
                     {parsedGdtf.fixtureTypeId && (
-                      <p className="text-[10px] text-muted-foreground/50 mt-0.5 font-mono truncate">{parsedGdtf.fixtureTypeId}</p>
+                      <p className="text-[10px] text-muted-foreground/40 mt-0.5 font-mono truncate">{parsedGdtf.fixtureTypeId}</p>
                     )}
                   </div>
                   <button onClick={() => { setParsedGdtf(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
@@ -402,6 +556,10 @@ export default function FixtureLibraryPage() {
                   </button>
                 </div>
 
+                {/* Specs pills for selected mode */}
+                <SpecPills specs={parsedGdtf.specs} mode={selectedModeObj} />
+
+                {/* Mode selector */}
                 {parsedGdtf.modes.length > 0 && (
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block">
@@ -412,7 +570,9 @@ export default function FixtureLibraryPage() {
                         <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs">
                           {parsedGdtf.modes[0].name}
                         </span>
-                        <span className="text-muted-foreground text-xs">{parsedGdtf.modes[0].footprint} channels</span>
+                        <span className="text-muted-foreground text-xs">
+                          {fmtBreaks(parsedGdtf.modes[0])}
+                        </span>
                       </div>
                     ) : (
                       <Select value={selectedMode} onValueChange={setSelectedMode}>
@@ -422,7 +582,7 @@ export default function FixtureLibraryPage() {
                         <SelectContent>
                           {parsedGdtf.modes.map(m => (
                             <SelectItem key={m.name} value={m.name}>
-                              {m.name} — {m.footprint} ch
+                              {m.name} — {fmtBreaks(m)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -439,7 +599,7 @@ export default function FixtureLibraryPage() {
             )}
           </div>
 
-          {/* ── GDTF Share search section ── */}
+          {/* ── GDTF Share search ── */}
           <div className="space-y-2">
             <p className="text-sm font-medium flex items-center gap-2">
               <Search className="w-4 h-4 text-muted-foreground" />
@@ -451,12 +611,12 @@ export default function FixtureLibraryPage() {
               <Input className="pl-9" placeholder="Search by manufacturer or model…"
                 value={gdtfQuery} onChange={e => setGdtfQuery(e.target.value)} />
               {gdtfQuery && (
-                <button onClick={() => setGdtfQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <button onClick={() => setGdtfQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
-
             <div className="max-h-[200px] overflow-y-auto rounded-lg border border-border bg-secondary/20">
               {gdtfError ? (
                 <div className="flex items-center gap-3 p-4 text-sm text-muted-foreground">
@@ -470,11 +630,11 @@ export default function FixtureLibraryPage() {
               ) : gdtfResults.length === 0 ? (
                 <div className="flex items-center gap-3 p-4 text-sm text-muted-foreground">
                   <AlertCircle className="w-4 h-4 text-yellow-500 shrink-0" />
-                  No results — the GDTF Share API may be unavailable. Try uploading a .gdtf file instead.
+                  No results — GDTF Share API may be unavailable. Try uploading a .gdtf file instead.
                 </div>
               ) : (
                 gdtfResults.map((f, i) => {
-                  const mfr = f.manufacturer ?? f.Manufacturer ?? f.vendor ?? "";
+                  const mfr  = f.manufacturer ?? f.Manufacturer ?? f.vendor ?? "";
                   const name = f.name ?? f.Name ?? f.fixture_name ?? f.FixtureName ?? "";
                   return (
                     <motion.div key={f.fixture_type_id ?? i}
