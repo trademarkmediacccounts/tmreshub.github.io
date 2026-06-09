@@ -10,6 +10,8 @@ export interface RigPosition {
   positionType: string;
   xPos: number;
   yPos: number;
+  widthPx: number;
+  heightPx: number;
   color: string;
   notes: string | null;
   sortOrder: number;
@@ -32,7 +34,7 @@ export function useCreateRigPosition() {
   return useMutation({
     mutationFn: ({ projectId, ...item }: RigPositionInsert & { projectId: string }) =>
       apiPost<RigPosition>(`/projects/${projectId}/rig-positions`, item),
-    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ["rig-positions", v.projectId] }); toast.success("Position added"); },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ["rig-positions", v.projectId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -50,7 +52,7 @@ export function useDeleteRigPosition() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => apiDelete(`/rig-positions/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["rig-positions"] }); toast.success("Position removed"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["rig-positions"] }); toast.success("Element removed"); },
     onError: (e: Error) => toast.error(e.message),
   });
 }

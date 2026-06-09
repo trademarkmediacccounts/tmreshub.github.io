@@ -23,14 +23,16 @@ router.get("/projects/:projectId/rig-positions", requireAuth, async (req: any, r
 
 router.post("/projects/:projectId/rig-positions", requireAuth, async (req: any, res): Promise<void> => {
   const { projectId } = req.params;
-  const { name, positionType, xPos, yPos, color, notes, sortOrder } = req.body;
+  const { name, positionType, xPos, yPos, widthPx, heightPx, color, notes, sortOrder } = req.body;
   if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [item] = await db.insert(rigPositionsTable).values({
     projectId, userId: req.userId, name,
     positionType: positionType ?? "Truss",
     xPos: xPos != null ? Number(xPos) : 0,
     yPos: yPos != null ? Number(yPos) : 0,
-    color: color ?? "#f97316",
+    widthPx: widthPx != null ? Number(widthPx) : 200,
+    heightPx: heightPx != null ? Number(heightPx) : 8,
+    color: color ?? "#333333",
     notes: notes ?? null,
     sortOrder: sortOrder != null ? Number(sortOrder) : 0,
   }).returning();
@@ -41,7 +43,7 @@ router.patch("/rig-positions/:id", requireAuth, async (req: any, res): Promise<v
   const { id } = req.params;
   const body = req.body;
   const updates: Record<string, any> = {};
-  const fields = ["name", "positionType", "xPos", "yPos", "color", "notes", "sortOrder"];
+  const fields = ["name", "positionType", "xPos", "yPos", "widthPx", "heightPx", "color", "notes", "sortOrder"];
   for (const f of fields) {
     if (body[f] !== undefined) updates[f] = body[f];
   }
