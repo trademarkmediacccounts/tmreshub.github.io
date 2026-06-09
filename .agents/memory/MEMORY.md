@@ -1,0 +1,2 @@
+- [TM Hub camelCase convention](tm-hub-camelcase.md) — all API fields are camelCase; pages/hooks must never use snake_case field names
+- [TM Hub stack](tm-hub-stack.md) — pnpm workspace, React+Vite+Tailwind v3(postcss), Express 5, Drizzle/Postgres, Clerk auth, react-router-dom

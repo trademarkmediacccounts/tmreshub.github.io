@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 3% 12%;
+    --foreground: 0 0% 93%;
+
+    --card: 0 2% 14%;
+    --card-foreground: 0 0% 93%;
+
+    --popover: 0 2% 14%;
+    --popover-foreground: 0 0% 93%;
+
+    --primary: 22 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 2% 17%;
+    --secondary-foreground: 0 0% 93%;
+
+    --muted: 0 2% 17%;
+    --muted-foreground: 240 4% 65%;
+
+    --accent: 0 2% 17%;
+    --accent-foreground: 0 0% 93%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.08;
+    --ring: 22 100% 50%;
+
+    --radius: 0.75rem;
+
+    --surface: 0 2% 14%;
+    --surface-hover: 0 2% 16%;
+    --primary-muted: 22 100% 50% / 0.1;
+
+    --sidebar-background: 0 3% 10%;
+    --sidebar-foreground: 0 0% 93%;
+    --sidebar-primary: 22 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 2% 14%;
+    --sidebar-accent-foreground: 0 0% 93%;
+    --sidebar-border: 0 0% 100% / 0.05;
+    --sidebar-ring: 22 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01";
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .tm-card {
+    @apply bg-card rounded-[12px] transition-all duration-200;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .tm-card:hover {
+    background-color: hsl(var(--surface-hover));
+  }
+
+  .tm-glow-btn {
+    @apply bg-primary text-primary-foreground px-4 py-2 rounded-[8px] font-medium transition-all duration-200 active:scale-[0.98];
+  }
+
+  .tm-glow-btn:hover {
+    box-shadow: 0 0 20px rgba(255, 94, 0, 0.3);
+  }
+
+  .tm-pill-active {
+    @apply text-primary rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: hsl(var(--primary-muted));
+  }
+
+  .tm-pill-draft {
+    @apply bg-secondary text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .tm-pill-complete {
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .tm-loading-bar {
+    @apply fixed top-0 left-0 h-0.5 bg-primary z-50;
+    animation: loadbar 1.5s cubic-bezier(0.2, 0, 0, 1) infinite;
+  }
+
+  @keyframes loadbar {
+    0% { width: 0%; left: 0; }
+    50% { width: 40%; left: 30%; }
+    100% { width: 0%; left: 100%; }
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
