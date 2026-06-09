@@ -24,13 +24,13 @@ export default function ProjectsPage() {
 
   const handleCreate = () => {
     if (!form.name.trim()) return;
-    const payload: Record<string, string | null> = {
+    const payload: Record<string, string | undefined> = {
       name: form.name,
-      description: form.description || null,
+      description: form.description || undefined,
       type: form.type,
-      client: form.client || null,
-      startDate: form.startDate || null,
-      endDate: form.endDate || null,
+      client: form.client || undefined,
+      startDate: form.startDate || undefined,
+      endDate: form.endDate || undefined,
     };
     createProject.mutate(payload as any, {
       onSuccess: () => {

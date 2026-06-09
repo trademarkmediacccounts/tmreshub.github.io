@@ -42,11 +42,11 @@ export default function ProjectOverview() {
     updateProject.mutate({
       id: project.id,
       name: editForm.name,
-      description: editForm.description || null,
+      description: editForm.description || undefined,
       type: editForm.type,
-      client: editForm.client || null,
-      startDate: editForm.startDate || null,
-      endDate: editForm.endDate || null,
+      client: editForm.client || undefined,
+      startDate: editForm.startDate || undefined,
+      endDate: editForm.endDate || undefined,
     }, { onSuccess: () => setEditOpen(false) });
   };
 

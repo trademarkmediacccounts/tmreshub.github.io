@@ -37,8 +37,8 @@ export default function Flow() {
   const createProjectFromLead = (lead: Lead) => {
     createProject.mutate({
       name: lead.service || lead.company || lead.name,
-      client: lead.company || null,
-      description: lead.notes || null,
+      client: lead.company || undefined,
+      description: lead.notes || undefined,
     } as any, {
       onSuccess: (project) => {
         updateLead.mutate({ id: lead.id, projectId: project.id });
