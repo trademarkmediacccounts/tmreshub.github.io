@@ -765,3 +765,256 @@ export const DeleteProjectResourceParams = zod.object({
 })
 
 
+export const ListShowFixturesResponseItem = zod.object({
+  "id": zod.string(),
+  "userId": zod.string(),
+  "manufacturer": zod.string(),
+  "model": zod.string(),
+  "mode": zod.string().nullish(),
+  "dmxFootprint": zod.number().nullish(),
+  "beamAngle": zod.string().nullish(),
+  "colorTemp": zod.string().nullish(),
+  "power": zod.string().nullish(),
+  "weight": zod.string().nullish(),
+  "gdtfManufacturer": zod.string().nullish(),
+  "gdtfName": zod.string().nullish(),
+  "gdtfRuid": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListShowFixturesResponse = zod.array(ListShowFixturesResponseItem)
+
+
+export const CreateShowFixtureBody = zod.object({
+  "manufacturer": zod.string(),
+  "model": zod.string(),
+  "mode": zod.string().optional(),
+  "dmxFootprint": zod.number().optional(),
+  "beamAngle": zod.string().optional(),
+  "colorTemp": zod.string().optional(),
+  "power": zod.string().optional(),
+  "weight": zod.string().optional(),
+  "gdtfManufacturer": zod.string().optional(),
+  "gdtfName": zod.string().optional(),
+  "gdtfRuid": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+export const UpdateShowFixtureParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateShowFixtureBody = zod.object({
+  "manufacturer": zod.string().optional(),
+  "model": zod.string().optional(),
+  "mode": zod.string().optional(),
+  "dmxFootprint": zod.number().optional(),
+  "beamAngle": zod.string().optional(),
+  "colorTemp": zod.string().optional(),
+  "power": zod.string().optional(),
+  "weight": zod.string().optional(),
+  "gdtfManufacturer": zod.string().optional(),
+  "gdtfName": zod.string().optional(),
+  "gdtfRuid": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateShowFixtureResponse = zod.object({
+  "id": zod.string(),
+  "userId": zod.string(),
+  "manufacturer": zod.string(),
+  "model": zod.string(),
+  "mode": zod.string().nullish(),
+  "dmxFootprint": zod.number().nullish(),
+  "beamAngle": zod.string().nullish(),
+  "colorTemp": zod.string().nullish(),
+  "power": zod.string().nullish(),
+  "weight": zod.string().nullish(),
+  "gdtfManufacturer": zod.string().nullish(),
+  "gdtfName": zod.string().nullish(),
+  "gdtfRuid": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeleteShowFixtureParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+export const ListPatchItemsParams = zod.object({
+  "projectId": zod.coerce.string()
+})
+
+export const ListPatchItemsResponseItem = zod.object({
+  "id": zod.string(),
+  "projectId": zod.string(),
+  "userId": zod.string(),
+  "fixtureName": zod.string(),
+  "manufacturer": zod.string().nullish(),
+  "dmxUniverse": zod.number(),
+  "dmxAddress": zod.number(),
+  "circuit": zod.string().nullish(),
+  "dimmerNumber": zod.string().nullish(),
+  "gelColor": zod.string().nullish(),
+  "purpose": zod.string().nullish(),
+  "position": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListPatchItemsResponse = zod.array(ListPatchItemsResponseItem)
+
+
+export const CreatePatchItemParams = zod.object({
+  "projectId": zod.coerce.string()
+})
+
+export const CreatePatchItemBody = zod.object({
+  "fixtureName": zod.string(),
+  "manufacturer": zod.string().optional(),
+  "dmxUniverse": zod.number().optional(),
+  "dmxAddress": zod.number(),
+  "circuit": zod.string().optional(),
+  "dimmerNumber": zod.string().optional(),
+  "gelColor": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "position": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+
+export const UpdatePatchItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdatePatchItemBody = zod.object({
+  "fixtureName": zod.string().optional(),
+  "manufacturer": zod.string().optional(),
+  "dmxUniverse": zod.number().optional(),
+  "dmxAddress": zod.number().optional(),
+  "circuit": zod.string().optional(),
+  "dimmerNumber": zod.string().optional(),
+  "gelColor": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "position": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdatePatchItemResponse = zod.object({
+  "id": zod.string(),
+  "projectId": zod.string(),
+  "userId": zod.string(),
+  "fixtureName": zod.string(),
+  "manufacturer": zod.string().nullish(),
+  "dmxUniverse": zod.number(),
+  "dmxAddress": zod.number(),
+  "circuit": zod.string().nullish(),
+  "dimmerNumber": zod.string().nullish(),
+  "gelColor": zod.string().nullish(),
+  "purpose": zod.string().nullish(),
+  "position": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeletePatchItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+export const ListRigPositionsParams = zod.object({
+  "projectId": zod.coerce.string()
+})
+
+export const ListRigPositionsResponseItem = zod.object({
+  "id": zod.string(),
+  "projectId": zod.string(),
+  "userId": zod.string(),
+  "name": zod.string(),
+  "positionType": zod.string(),
+  "xPos": zod.number(),
+  "yPos": zod.number(),
+  "color": zod.string(),
+  "notes": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListRigPositionsResponse = zod.array(ListRigPositionsResponseItem)
+
+
+export const CreateRigPositionParams = zod.object({
+  "projectId": zod.coerce.string()
+})
+
+export const CreateRigPositionBody = zod.object({
+  "name": zod.string(),
+  "positionType": zod.string().optional(),
+  "xPos": zod.number().optional(),
+  "yPos": zod.number().optional(),
+  "color": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+
+export const UpdateRigPositionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateRigPositionBody = zod.object({
+  "name": zod.string().optional(),
+  "positionType": zod.string().optional(),
+  "xPos": zod.number().optional(),
+  "yPos": zod.number().optional(),
+  "color": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdateRigPositionResponse = zod.object({
+  "id": zod.string(),
+  "projectId": zod.string(),
+  "userId": zod.string(),
+  "name": zod.string(),
+  "positionType": zod.string(),
+  "xPos": zod.number(),
+  "yPos": zod.number(),
+  "color": zod.string(),
+  "notes": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeleteRigPositionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+export const SearchGdtfFixturesQueryParams = zod.object({
+  "search": zod.coerce.string().optional()
+})
+
+export const SearchGdtfFixturesResponseItem = zod.object({
+  "fixture_type_id": zod.string().optional(),
+  "name": zod.string().optional(),
+  "manufacturer": zod.string().optional(),
+  "revision_date": zod.string().optional(),
+  "create_date": zod.string().optional()
+})
+export const SearchGdtfFixturesResponse = zod.array(SearchGdtfFixturesResponseItem)
+
+

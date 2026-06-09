@@ -10,3 +10,6 @@ export * from "./projectAssets";
 export * from "./leads";
 export * from "./stagingEnvironments";
 export * from "./projectResources";
+export * from "./showFixtures";
+export * from "./patchItems";
+export * from "./rigPositions";

@@ -20,6 +20,10 @@ tags:
   - name: leads
   - name: staging-environments
   - name: project-resources
+  - name: show-fixtures
+  - name: patch
+  - name: rig-positions
+  - name: gdtf
 paths:
   /healthz:
     get:
@@ -916,6 +920,252 @@ paths:
         "204":
           description: Deleted
 
+  # Show Fixtures
+  /fixtures:
+    get:
+      operationId: listShowFixtures
+      tags: [show-fixtures]
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShowFixture"
+    post:
+      operationId: createShowFixture
+      tags: [show-fixtures]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShowFixtureInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShowFixture"
+
+  /fixtures/{id}:
+    patch:
+      operationId: updateShowFixture
+      tags: [show-fixtures]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShowFixtureUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShowFixture"
+    delete:
+      operationId: deleteShowFixture
+      tags: [show-fixtures]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # Patch Items
+  /projects/{projectId}/patch:
+    get:
+      operationId: listPatchItems
+      tags: [patch]
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PatchItem"
+    post:
+      operationId: createPatchItem
+      tags: [patch]
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatchItem"
+
+  /patch/{id}:
+    patch:
+      operationId: updatePatchItem
+      tags: [patch]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchItemUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatchItem"
+    delete:
+      operationId: deletePatchItem
+      tags: [patch]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # Rig Positions
+  /projects/{projectId}/rig-positions:
+    get:
+      operationId: listRigPositions
+      tags: [rig-positions]
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RigPosition"
+    post:
+      operationId: createRigPosition
+      tags: [rig-positions]
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RigPositionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RigPosition"
+
+  /rig-positions/{id}:
+    patch:
+      operationId: updateRigPosition
+      tags: [rig-positions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RigPositionUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RigPosition"
+    delete:
+      operationId: deleteRigPosition
+      tags: [rig-positions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # GDTF
+  /gdtf/fixtures:
+    get:
+      operationId: searchGdtfFixtures
+      tags: [gdtf]
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: GDTF fixture search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GdtfFixture"
+
 components:
   schemas:
     HealthStatus:
@@ -1354,3 +1604,152 @@ components:
         supplier: { type: string }
         cost: { type: string }
         notes: { type: string }
+
+    ShowFixture:
+      type: object
+      required: [id, userId, manufacturer, model, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        manufacturer: { type: string }
+        model: { type: string }
+        mode: { type: ["string", "null"] }
+        dmxFootprint: { type: ["integer", "null"] }
+        beamAngle: { type: ["string", "null"] }
+        colorTemp: { type: ["string", "null"] }
+        power: { type: ["string", "null"] }
+        weight: { type: ["string", "null"] }
+        gdtfManufacturer: { type: ["string", "null"] }
+        gdtfName: { type: ["string", "null"] }
+        gdtfRuid: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    ShowFixtureInput:
+      type: object
+      required: [manufacturer, model]
+      properties:
+        manufacturer: { type: string }
+        model: { type: string }
+        mode: { type: string }
+        dmxFootprint: { type: integer }
+        beamAngle: { type: string }
+        colorTemp: { type: string }
+        power: { type: string }
+        weight: { type: string }
+        gdtfManufacturer: { type: string }
+        gdtfName: { type: string }
+        gdtfRuid: { type: string }
+        notes: { type: string }
+    ShowFixtureUpdate:
+      type: object
+      properties:
+        manufacturer: { type: string }
+        model: { type: string }
+        mode: { type: string }
+        dmxFootprint: { type: integer }
+        beamAngle: { type: string }
+        colorTemp: { type: string }
+        power: { type: string }
+        weight: { type: string }
+        gdtfManufacturer: { type: string }
+        gdtfName: { type: string }
+        gdtfRuid: { type: string }
+        notes: { type: string }
+
+    PatchItem:
+      type: object
+      required: [id, projectId, userId, fixtureName, dmxUniverse, dmxAddress, sortOrder, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        userId: { type: string }
+        fixtureName: { type: string }
+        manufacturer: { type: ["string", "null"] }
+        dmxUniverse: { type: integer }
+        dmxAddress: { type: integer }
+        circuit: { type: ["string", "null"] }
+        dimmerNumber: { type: ["string", "null"] }
+        gelColor: { type: ["string", "null"] }
+        purpose: { type: ["string", "null"] }
+        position: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    PatchItemInput:
+      type: object
+      required: [fixtureName, dmxAddress]
+      properties:
+        fixtureName: { type: string }
+        manufacturer: { type: string }
+        dmxUniverse: { type: integer }
+        dmxAddress: { type: integer }
+        circuit: { type: string }
+        dimmerNumber: { type: string }
+        gelColor: { type: string }
+        purpose: { type: string }
+        position: { type: string }
+        notes: { type: string }
+        sortOrder: { type: integer }
+    PatchItemUpdate:
+      type: object
+      properties:
+        fixtureName: { type: string }
+        manufacturer: { type: string }
+        dmxUniverse: { type: integer }
+        dmxAddress: { type: integer }
+        circuit: { type: string }
+        dimmerNumber: { type: string }
+        gelColor: { type: string }
+        purpose: { type: string }
+        position: { type: string }
+        notes: { type: string }
+        sortOrder: { type: integer }
+
+    RigPosition:
+      type: object
+      required: [id, projectId, userId, name, positionType, xPos, yPos, color, sortOrder, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        userId: { type: string }
+        name: { type: string }
+        positionType: { type: string }
+        xPos: { type: integer }
+        yPos: { type: integer }
+        color: { type: string }
+        notes: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    RigPositionInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        positionType: { type: string }
+        xPos: { type: integer }
+        yPos: { type: integer }
+        color: { type: string }
+        notes: { type: string }
+        sortOrder: { type: integer }
+    RigPositionUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        positionType: { type: string }
+        xPos: { type: integer }
+        yPos: { type: integer }
+        color: { type: string }
+        notes: { type: string }
+        sortOrder: { type: integer }
+
+    GdtfFixture:
+      type: object
+      properties:
+        fixture_type_id: { type: string }
+        name: { type: string }
+        manufacturer: { type: string }
+        revision_date: { type: string }
+        create_date: { type: string }

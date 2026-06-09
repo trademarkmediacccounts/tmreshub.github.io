@@ -44,7 +44,7 @@ router.patch("/staging-environments/:id", requireAuth, async (req: any, res): Pr
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = UpdateStagingEnvironmentBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [item] = await db.update(stagingEnvironmentsTable).set(parsed.data)
+  const [item] = await db.update(stagingEnvironmentsTable).set(parsed.data as any)
     .where(and(eq(stagingEnvironmentsTable.id, params.data.id), eq(stagingEnvironmentsTable.userId, req.userId))).returning();
   if (!item) { res.status(404).json({ error: "Not found" }); return; }
   res.json(item);

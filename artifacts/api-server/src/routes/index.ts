@@ -12,6 +12,10 @@ import projectAssetsRouter from "./projectAssets";
 import leadsRouter from "./leads";
 import stagingEnvironmentsRouter from "./stagingEnvironments";
 import projectResourcesRouter from "./projectResources";
+import showFixturesRouter from "./showFixtures";
+import patchItemsRouter from "./patchItems";
+import rigPositionsRouter from "./rigPositions";
+import gdtfRouter from "./gdtf";
 
 const router: IRouter = Router();
 
@@ -28,5 +32,9 @@ router.use(projectAssetsRouter);
 router.use(leadsRouter);
 router.use(stagingEnvironmentsRouter);
 router.use(projectResourcesRouter);
+router.use(showFixturesRouter);
+router.use(patchItemsRouter);
+router.use(rigPositionsRouter);
+router.use(gdtfRouter);
 
 export default router;

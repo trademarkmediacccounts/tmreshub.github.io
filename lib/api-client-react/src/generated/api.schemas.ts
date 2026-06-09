@@ -439,3 +439,164 @@ export interface ProjectResourceUpdate {
   notes?: string;
 }
 
+export interface ShowFixture {
+  id: string;
+  userId: string;
+  manufacturer: string;
+  model: string;
+  /** @nullable */
+  mode?: string | null;
+  /** @nullable */
+  dmxFootprint?: number | null;
+  /** @nullable */
+  beamAngle?: string | null;
+  /** @nullable */
+  colorTemp?: string | null;
+  /** @nullable */
+  power?: string | null;
+  /** @nullable */
+  weight?: string | null;
+  /** @nullable */
+  gdtfManufacturer?: string | null;
+  /** @nullable */
+  gdtfName?: string | null;
+  /** @nullable */
+  gdtfRuid?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShowFixtureInput {
+  manufacturer: string;
+  model: string;
+  mode?: string;
+  dmxFootprint?: number;
+  beamAngle?: string;
+  colorTemp?: string;
+  power?: string;
+  weight?: string;
+  gdtfManufacturer?: string;
+  gdtfName?: string;
+  gdtfRuid?: string;
+  notes?: string;
+}
+
+export interface ShowFixtureUpdate {
+  manufacturer?: string;
+  model?: string;
+  mode?: string;
+  dmxFootprint?: number;
+  beamAngle?: string;
+  colorTemp?: string;
+  power?: string;
+  weight?: string;
+  gdtfManufacturer?: string;
+  gdtfName?: string;
+  gdtfRuid?: string;
+  notes?: string;
+}
+
+export interface PatchItem {
+  id: string;
+  projectId: string;
+  userId: string;
+  fixtureName: string;
+  /** @nullable */
+  manufacturer?: string | null;
+  dmxUniverse: number;
+  dmxAddress: number;
+  /** @nullable */
+  circuit?: string | null;
+  /** @nullable */
+  dimmerNumber?: string | null;
+  /** @nullable */
+  gelColor?: string | null;
+  /** @nullable */
+  purpose?: string | null;
+  /** @nullable */
+  position?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PatchItemInput {
+  fixtureName: string;
+  manufacturer?: string;
+  dmxUniverse?: number;
+  dmxAddress: number;
+  circuit?: string;
+  dimmerNumber?: string;
+  gelColor?: string;
+  purpose?: string;
+  position?: string;
+  notes?: string;
+  sortOrder?: number;
+}
+
+export interface PatchItemUpdate {
+  fixtureName?: string;
+  manufacturer?: string;
+  dmxUniverse?: number;
+  dmxAddress?: number;
+  circuit?: string;
+  dimmerNumber?: string;
+  gelColor?: string;
+  purpose?: string;
+  position?: string;
+  notes?: string;
+  sortOrder?: number;
+}
+
+export interface RigPosition {
+  id: string;
+  projectId: string;
+  userId: string;
+  name: string;
+  positionType: string;
+  xPos: number;
+  yPos: number;
+  color: string;
+  /** @nullable */
+  notes?: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RigPositionInput {
+  name: string;
+  positionType?: string;
+  xPos?: number;
+  yPos?: number;
+  color?: string;
+  notes?: string;
+  sortOrder?: number;
+}
+
+export interface RigPositionUpdate {
+  name?: string;
+  positionType?: string;
+  xPos?: number;
+  yPos?: number;
+  color?: string;
+  notes?: string;
+  sortOrder?: number;
+}
+
+export interface GdtfFixture {
+  fixture_type_id?: string;
+  name?: string;
+  manufacturer?: string;
+  revision_date?: string;
+  create_date?: string;
+}
+
+export type SearchGdtfFixturesParams = {
+search?: string;
+};
+

@@ -5,7 +5,7 @@ import { useCallSheets } from "@/hooks/useCallSheets";
 import { useScriptBreakdowns } from "@/hooks/useScriptBreakdowns";
 import { useProjectAssets } from "@/hooks/useProjectAssets";
 import { PageHeader } from "@/components/PageHeader";
-import { Camera, ClipboardList, FileText, FolderOpen, ArrowRight, Edit, Globe, Users, Package } from "lucide-react";
+import { Camera, ClipboardList, FileText, FolderOpen, ArrowRight, Edit, Globe, Package, Zap, Layers, LayoutGrid } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -58,6 +58,9 @@ export default function ProjectOverview() {
     files: { icon: FolderOpen, label: "Files & Assets", path: "files", count: assets.length, desc: "Manage project files" },
     staging: { icon: Globe, label: "Web Staging", path: "staging", count: 0, desc: "Manage staging environments" },
     resources: { icon: Package, label: "Resources", path: "resources", count: 0, desc: "Track equipment & resources" },
+    fixtures: { icon: Zap, label: "Fixture Library", path: "fixtures", count: 0, desc: "Manage GDTF fixture library" },
+    patch: { icon: Layers, label: "Patch List", path: "patch", count: 0, desc: "DMX patch sheet & export" },
+    plot: { icon: LayoutGrid, label: "Lighting Plot", path: "plot", count: 0, desc: "Visual rig position planner" },
   };
 
   let moduleKeys: string[];
@@ -66,7 +69,7 @@ export default function ProjectOverview() {
   } else if (WEB_TYPES.includes(project.type)) {
     moduleKeys = ["staging", "files"];
   } else if (PRODUCTION_TYPES.includes(project.type)) {
-    moduleKeys = ["schedule", "resources", "files"];
+    moduleKeys = ["fixtures", "patch", "plot", "schedule", "resources", "files"];
   } else {
     moduleKeys = ["shots", "schedule", "breakdown", "files"];
   }
