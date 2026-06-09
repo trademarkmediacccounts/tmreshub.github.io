@@ -72,5 +72,7 @@ export function useGdtfSearch(search: string) {
     queryFn: () => apiGet<GdtfFixture[]>(`/gdtf/fixtures?search=${encodeURIComponent(search)}`),
     enabled: search.trim().length >= 2,
     staleTime: 1000 * 60 * 5,
+    retry: false,
+    throwOnError: false,
   });
 }
